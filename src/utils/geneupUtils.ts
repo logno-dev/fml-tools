@@ -118,7 +118,8 @@ export const generateCSV = (samples: ProcessedSample[]): string => {
 
 export const downloadCSV = (assay: string, samples: ProcessedSample[]) => {
   const csv = generateCSV(samples)
-  const blob = new Blob([csv], { type: 'text/csv' })
+  const utf8BOM = '\ufeff'
+  const blob = new Blob([utf8BOM, csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
