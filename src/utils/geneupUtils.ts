@@ -65,11 +65,11 @@ export const ASSAY_MAPPINGS: AssayMapping[] = [
 
 export const extractAssayFromTestName = (testName: string): string | null => {
   const normalizedTestName = testName.toLowerCase().replace(/\s+/g, ' ').trim()
-  
+
   for (const mapping of ASSAY_MAPPINGS) {
     for (const pattern of mapping.testNamePatterns) {
       const normalizedPattern = pattern.toLowerCase().replace(/\s+/g, ' ').trim()
-      
+
       if (normalizedTestName.includes(normalizedPattern)) {
         return mapping.assayName
       }
@@ -113,7 +113,7 @@ export const generateCSV = (samples: ProcessedSample[]): string => {
     '', '', '', ''
   ])
 
-  return [headers, ...rows].map(row => row.join(',')).join('\n')
+  return [headers, ...rows].map(row => row.join(',')).join('\r\n')
 }
 
 export const downloadCSV = (assay: string, samples: ProcessedSample[]) => {
