@@ -74,7 +74,7 @@ pnpm lint
 
 ### Water Potability Tracer Log
 - **Input**: CSV or Excel file with `Test Name` and `Sample Num` columns
-- **Supported tests**: `Coliforms & E. coli - Colitag v.8` and `HPC-0,1 v.3`
+- **Supported tests**: Test Names containing `Colitag` (case-insensitive) and `HPC-0,1 v.3`
 - **Output**: Versioned Excel tracer log with the two test tables stacked vertically
 
 ## Project Structure

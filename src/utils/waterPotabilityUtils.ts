@@ -12,6 +12,7 @@ export interface WaterPotabilityField {
 export interface WaterPotabilityTest {
   id: string
   name: string
+  pattern?: RegExp
   fields: WaterPotabilityField[]
 }
 
@@ -40,6 +41,7 @@ export const WATER_POTABILITY_FORM_136_V100526: WaterPotabilityFormVersion = {
     {
       id: 'colitag-v8',
       name: 'Coliforms & E. coli - Colitag v.8',
+      pattern: /colitag/i,
       fields: [
         { id: 'chlorineCheckTime', label: 'Time of Chlorine Check', type: 'time' },
         { id: 'chlorineCheckPpm', label: 'Chlorine  Check (ppm)', type: 'text' },
@@ -84,7 +86,6 @@ export const parseWaterPotabilityRows = (
     throw new Error('The input file must contain Test Name and Sample Num columns.')
   }
 
-  const testsByName = new Map(form.tests.map((test) => [test.name.toLowerCase(), test]))
   const samples: WaterPotabilitySample[] = []
   const errors: string[] = []
 
@@ -98,7 +99,9 @@ export const parseWaterPotabilityRows = (
       return
     }
 
-    const test = testsByName.get(testName.toLowerCase())
+    const test = form.tests.find((candidate) => (
+      candidate.pattern?.test(testName) || candidate.name.toLowerCase() === testName.toLowerCase()
+    ))
     if (!test) {
       errors.push(`Row ${sourceRow}: unsupported Test Name "${testName}".`)
       return
@@ -107,7 +110,7 @@ export const parseWaterPotabilityRows = (
     samples.push({
       id: `${sourceRow}-${test.id}-${sampleNum}`,
       testId: test.id,
-      testName: test.name,
+      testName,
       sampleNum,
       values: Object.fromEntries(test.fields.map((field) => [field.id, ''])),
     })
@@ -190,7 +193,7 @@ export const createWaterPotabilityWorkbook = (
     const testSamples = samples.filter((sample) => sample.testId === test.id)
     testSamples.forEach((sample) => {
       const sampleRow = worksheet.addRow([
-        test.name,
+        sample.testName,
         sample.sampleNum,
         ...test.fields.map((field) => excelValue(field, sample.values[field.id])),
       ])
