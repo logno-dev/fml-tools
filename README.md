@@ -1,6 +1,6 @@
 # FML Tools
 
-A collection of laboratory tools for file processing and data management, combining the functionality of GeneUP CSV Generator and QC Print Generator into a single application.
+A collection of laboratory tools for file processing and data management.
 
 ## Features
 
@@ -18,30 +18,35 @@ A collection of laboratory tools for file processing and data management, combin
 - Optimized for A4 printing with proper page breaks
 - Two-column layout for efficient space usage
 
+### Water Potability Tracer Log (`/water-potability`)
+- Read CSV or Excel input containing `Test Name` and `Sample Num`
+- Collect the fields required by each supported test for every sample
+- Generate `Water Potability Tracer Log Form 136 v.100526.xlsx`
+
 ## Getting Started
 
 ### Prerequisites
 - Node.js (version 20.19.0 or higher, or 22.12.0+)
-- npm
+- pnpm
 
 ### Installation
 ```bash
-npm install
+pnpm install
 ```
 
 ### Development
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### Build
 ```bash
-npm run build
+pnpm build
 ```
 
 ### Lint
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ## Usage
@@ -49,7 +54,8 @@ npm run lint
 1. Navigate to the application in your browser
 2. Use the navigation bar to switch between tools:
    - **GeneUP CSV Generator**: `/geneup`
-   - **QC Print Generator**: `/qc`
+    - **QC Print Generator**: `/qc`
+    - **Water Potability Tracer Log**: `/water-potability`
 3. Upload Excel files using drag-and-drop or file selection
 4. Process files and download results
 
@@ -65,6 +71,11 @@ npm run lint
 ### QC Print Generator
 - **Input**: Excel files (.xlsx, .xls) with data in columns B and C
 - **Output**: Print-ready HTML tables optimized for A4 paper
+
+### Water Potability Tracer Log
+- **Input**: CSV or Excel file with `Test Name` and `Sample Num` columns
+- **Supported tests**: `Coliforms & E. coli - Colitag v.8` and `HPC-0,1 v.3`
+- **Output**: Versioned Excel tracer log with the two test tables stacked vertically
 
 ## Project Structure
 
@@ -102,6 +113,7 @@ src/
 - `/` - Home page with tool selection
 - `/geneup` - GeneUP CSV Generator
 - `/qc` - QC Print Generator
+- `/water-potability` - Water Potability Tracer Log Form 136 v.100526
 
 ## Migration Notes
 

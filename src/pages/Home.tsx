@@ -9,7 +9,7 @@ function Home() {
           A collection of laboratory tools for file processing and data management
         </p>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           <Link
             to="/geneup"
             className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300 block"
@@ -52,6 +52,21 @@ function Home() {
             </p>
             <div className="text-blue-600 font-medium">
               Go to Siliker Tool →
+            </div>
+          </Link>
+
+          <Link
+            to="/water-potability"
+            className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300 block"
+          >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Water Potability Tracer Log
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Complete sample tracer fields and generate Water Potability Form 136 v.100526.
+            </p>
+            <div className="text-blue-600 font-medium">
+              Go to Water Potability Tool →
             </div>
           </Link>
         </div>

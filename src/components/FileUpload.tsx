@@ -12,8 +12,13 @@ interface FileUploadProps {
 function FileUpload({ files, onFilesChange, multiple = false, accept = ".xlsx,.xls", title, description }: FileUploadProps) {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    const acceptedTypes = accept.split(',').map(type => type.trim().toLowerCase())
     const droppedFiles = Array.from(e.dataTransfer.files).filter(
-      file => file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+      file => acceptedTypes.some(type => (
+        type.startsWith('.')
+          ? file.name.toLowerCase().endsWith(type)
+          : type === file.type.toLowerCase()
+      ))
     )
     
     if (multiple) {
@@ -21,7 +26,7 @@ function FileUpload({ files, onFilesChange, multiple = false, accept = ".xlsx,.x
     } else {
       onFilesChange(droppedFiles.slice(0, 1))
     }
-  }, [files, onFilesChange, multiple])
+  }, [accept, files, onFilesChange, multiple])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
