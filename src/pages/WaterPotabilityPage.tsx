@@ -128,12 +128,18 @@ function WaterPotabilityPage() {
 
             {ACTIVE_WATER_POTABILITY_FORM.tests.map((test) => {
               const testSamples = samples.filter((sample) => sample.testId === test.id)
+              const inputFields = test.fields.filter((field) => !field.derivedFrom)
               return (
                 <section key={test.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="bg-slate-800 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-lg font-semibold">{test.name}</h2>
                     <span className="text-sm text-slate-300">{testSamples.length} sample{testSamples.length === 1 ? '' : 's'}</span>
                   </div>
+                  {test.fields.some((field) => field.derivedFrom) && (
+                    <p className="bg-cyan-50 border-b border-cyan-100 px-6 py-3 text-sm text-cyan-900">
+                      SMA Temper Exp Time is calculated automatically as three hours after SMA Temper Start Time.
+                    </p>
+                  )}
                   {testSamples.length === 0 ? (
                     <p className="p-6 text-gray-500">No samples for this test were found in the input file.</p>
                   ) : (
@@ -142,7 +148,7 @@ function WaterPotabilityPage() {
                         <thead className="bg-slate-50">
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Sample Num</th>
-                            {test.fields.map((field) => (
+                            {inputFields.map((field) => (
                               <th key={field.id} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                                 {field.label}
                               </th>
@@ -153,7 +159,7 @@ function WaterPotabilityPage() {
                           {testSamples.map((sample) => (
                             <tr key={sample.id}>
                               <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{sample.sampleNum}</td>
-                              {test.fields.map((field) => (
+                              {inputFields.map((field) => (
                                 <td key={field.id} className="px-4 py-3 min-w-48">
                                   <input
                                     type={field.type}

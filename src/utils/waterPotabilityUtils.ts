@@ -7,6 +7,8 @@ export interface WaterPotabilityField {
   id: string
   label: string
   type: WaterPotabilityFieldType
+  derivedFrom?: string
+  offsetHours?: number
 }
 
 export interface WaterPotabilityTest {
@@ -53,7 +55,13 @@ export const WATER_POTABILITY_FORM_136_V100526: WaterPotabilityFormVersion = {
       name: 'HPC-0,1 v.3',
       fields: [
         { id: 'smaTemperStartTime', label: 'SMA Temper Start Time', type: 'time' },
-        { id: 'smaTemperExpirationTime', label: 'SMA Temper Exp Time', type: 'time' },
+        {
+          id: 'smaTemperExpirationTime',
+          label: 'SMA Temper Exp Time',
+          type: 'time',
+          derivedFrom: 'smaTemperStartTime',
+          offsetHours: 3,
+        },
         { id: 'platingStartTime', label: 'Plating Start Time', type: 'time' },
         { id: 'platingEndTime', label: 'Plating End Time', type: 'time' },
         { id: 'mediaPouredTime', label: 'Media Poured Time', type: 'time' },
@@ -112,7 +120,9 @@ export const parseWaterPotabilityRows = (
       testId: test.id,
       testName,
       sampleNum,
-      values: Object.fromEntries(test.fields.map((field) => [field.id, ''])),
+      values: Object.fromEntries(
+        test.fields.filter((field) => !field.derivedFrom).map((field) => [field.id, '']),
+      ),
     })
   })
 
@@ -139,7 +149,8 @@ const excelTime = (value: string) => {
   return (hours * 60 + minutes) / (24 * 60)
 }
 
-const excelValue = (field: WaterPotabilityField, value: string): string | number => {
+const excelValue = (field: WaterPotabilityField, values: Record<string, string>): string | number => {
+  const value = field.derivedFrom ? values[field.derivedFrom] : values[field.id]
   if (field.type === 'time') return excelTime(value)
   const numericValue = Number(value)
   return value.trim() !== '' && Number.isFinite(numericValue) ? numericValue : value
@@ -195,7 +206,13 @@ export const createWaterPotabilityWorkbook = (
       const sampleRow = worksheet.addRow([
         sample.testName,
         sample.sampleNum,
-        ...test.fields.map((field) => excelValue(field, sample.values[field.id])),
+        ...test.fields.map((field) => {
+          const value = excelValue(field, sample.values)
+          if (field.derivedFrom && typeof value === 'number') {
+            return (value + (field.offsetHours ?? 0) / 24) % 1
+          }
+          return value
+        }),
       ])
       sampleRow.eachCell((cell, column) => {
         cell.border = border

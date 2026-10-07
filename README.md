@@ -21,6 +21,7 @@ A collection of laboratory tools for file processing and data management.
 ### Water Potability Tracer Log (`/water-potability`)
 - Read CSV or Excel input containing `Test Name` and `Sample Num`
 - Collect the fields required by each supported test for every sample
+- Calculate SMA Temper Exp Time as three hours after SMA Temper Start Time
 - Generate `Water Potability Tracer Log Form 136 v.100526.xlsx`
 
 ## Getting Started
