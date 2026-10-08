@@ -6,6 +6,8 @@ export interface ProcessedData {
   columnC: string
 }
 
+const specialRunPattern = /SpecialRun/i
+
 export const processQcExcelFile = async (file: File): Promise<ProcessedData[]> => {
   const jsonData = await readExcelFileAsArray(file)
   const processedRows: ProcessedData[] = []
@@ -25,8 +27,14 @@ export const processQcExcelFile = async (file: File): Promise<ProcessedData[]> =
     }
   })
 
-  // Sort alphabetically by column C first, then by column B
+  // Prioritize SpecialRun rows, then sort by column C and column B as before.
   processedRows.sort((a, b) => {
+    const aIsSpecialRun = specialRunPattern.test(`${a.columnB} ${a.columnC}`)
+    const bIsSpecialRun = specialRunPattern.test(`${b.columnB} ${b.columnC}`)
+    if (aIsSpecialRun !== bIsSpecialRun) {
+      return aIsSpecialRun ? -1 : 1
+    }
+
     const columnCCompare = a.columnC.localeCompare(b.columnC)
     if (columnCCompare !== 0) {
       return columnCCompare
