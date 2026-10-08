@@ -71,7 +71,7 @@ function WaterPotabilityPage() {
           onFilesChange={handleFilesChange}
           accept=".xlsx,.xls,.csv"
           title="Drag and drop a CSV or Excel file here"
-          description="Supports Test Names containing Colitag and the HPC-0,1 v.3 test"
+          description="Supports Test Names containing Colitag or HPC"
         />
 
         {files[0] && samples.length === 0 && (

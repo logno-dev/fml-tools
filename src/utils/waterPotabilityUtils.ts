@@ -53,6 +53,7 @@ export const WATER_POTABILITY_FORM_136_V100526: WaterPotabilityFormVersion = {
     {
       id: 'hpc-v3',
       name: 'HPC-0,1 v.3',
+      pattern: /hpc/i,
       fields: [
         { id: 'smaTemperStartTime', label: 'SMA Temper Start Time', type: 'time' },
         {
