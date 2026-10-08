@@ -49,7 +49,10 @@ function WaterPotabilityPage() {
     )))
   }
 
-  const missingValues = samples.some((sample) => Object.values(sample.values).some((value) => !value.trim()))
+  const missingValues = samples.some((sample) => {
+    const test = ACTIVE_WATER_POTABILITY_FORM.tests.find((candidate) => candidate.id === sample.testId)
+    return test?.fields.some((field) => !field.derivedFrom && !sample.values[field.id]?.trim()) ?? true
+  })
   const canDownload = samples.length > 0 && Boolean(date) && Boolean(analyst.trim()) && !missingValues
 
   return (
