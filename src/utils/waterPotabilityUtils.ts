@@ -146,18 +146,21 @@ export const readWaterPotabilityFile = async (file: File) => {
 }
 
 const excelTime = (value: string) => {
+  if (!value?.trim()) return ''
   const [hours, minutes] = value.split(':').map(Number)
   return (hours * 60 + minutes) / (24 * 60)
 }
 
 const excelValue = (field: WaterPotabilityField, values: Record<string, string>): string | number => {
-  const value = field.derivedFrom ? values[field.derivedFrom] : values[field.id]
+  const value = (field.derivedFrom ? values[field.derivedFrom] : values[field.id]) ?? ''
+  if (!value.trim()) return ''
   if (field.type === 'time') return excelTime(value)
   const numericValue = Number(value)
   return value.trim() !== '' && Number.isFinite(numericValue) ? numericValue : value
 }
 
 const formatDate = (isoDate: string) => {
+  if (!isoDate) return ''
   const [year, month, day] = isoDate.split('-').map(Number)
   return `${month}/${day}/${String(year).slice(-2)}`
 }
@@ -215,7 +218,8 @@ export const createWaterPotabilityWorkbook = (
           return value
         }),
       ])
-      sampleRow.eachCell((cell, column) => {
+      sampleRow.height = 24
+      sampleRow.eachCell({ includeEmpty: true }, (cell, column) => {
         cell.border = border
         cell.alignment = { vertical: 'middle' }
         if (column <= 2) {
@@ -229,12 +233,7 @@ export const createWaterPotabilityWorkbook = (
   return workbook
 }
 
-export const downloadWaterPotabilityWorkbook = async (
-  samples: WaterPotabilitySample[],
-  date: string,
-  analyst: string,
-) => {
-  const workbook = createWaterPotabilityWorkbook(samples, date, analyst)
+const saveWaterPotabilityWorkbook = async (workbook: ExcelJS.Workbook, filename: string) => {
   const buffer = await workbook.xlsx.writeBuffer()
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -242,7 +241,39 @@ export const downloadWaterPotabilityWorkbook = async (
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = ACTIVE_WATER_POTABILITY_FORM.outputFilename
+  link.download = filename
   link.click()
   URL.revokeObjectURL(url)
+}
+
+export const downloadWaterPotabilityWorkbook = async (
+  samples: WaterPotabilitySample[],
+  date: string,
+  analyst: string,
+  filename = ACTIVE_WATER_POTABILITY_FORM.outputFilename,
+) => {
+  await saveWaterPotabilityWorkbook(createWaterPotabilityWorkbook(samples, date, analyst), filename)
+}
+
+export const createBlankWaterPotabilityWorkbook = (rowsPerTest: number) => {
+  const rowCount = Math.max(1, Math.min(100, Math.floor(rowsPerTest)))
+  const samples = ACTIVE_WATER_POTABILITY_FORM.tests.flatMap((test) => (
+    Array.from({ length: rowCount }, (_, index): WaterPotabilitySample => ({
+      id: `blank-${test.id}-${index}`,
+      testId: test.id,
+      testName: test.name,
+      sampleNum: '',
+      values: {},
+    }))
+  ))
+
+  return createWaterPotabilityWorkbook(samples, '', '')
+}
+
+export const downloadBlankWaterPotabilityWorkbook = async (rowsPerTest: number) => {
+  const rowCount = Math.max(1, Math.min(100, Math.floor(rowsPerTest)))
+  await saveWaterPotabilityWorkbook(
+    createBlankWaterPotabilityWorkbook(rowCount),
+    `Water Potability Tracer Log Form 136 v.100526 - Blank ${rowCount} Rows.xlsx`,
+  )
 }

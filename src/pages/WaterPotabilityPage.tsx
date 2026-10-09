@@ -2,6 +2,7 @@ import { useState } from 'react'
 import FileUpload from '../components/FileUpload'
 import {
   ACTIVE_WATER_POTABILITY_FORM,
+  downloadBlankWaterPotabilityWorkbook,
   downloadWaterPotabilityWorkbook,
   readWaterPotabilityFile,
   type WaterPotabilitySample,
@@ -18,6 +19,7 @@ function WaterPotabilityPage() {
   const [samples, setSamples] = useState<WaterPotabilitySample[]>([])
   const [date, setDate] = useState(today)
   const [analyst, setAnalyst] = useState('')
+  const [blankRows, setBlankRows] = useState(10)
   const [error, setError] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -28,11 +30,20 @@ function WaterPotabilityPage() {
   }
 
   const loadSamples = async () => {
-    if (!files[0]) return
+    if (files.length === 0) return
     setIsProcessing(true)
     setError('')
     try {
-      setSamples(await readWaterPotabilityFile(files[0]))
+      const loadedFiles = await Promise.all(files.map(async (file, fileIndex) => {
+        try {
+          const fileSamples = await readWaterPotabilityFile(file)
+          return fileSamples.map((sample) => ({ ...sample, id: `${fileIndex}-${sample.id}` }))
+        } catch (loadError) {
+          const message = loadError instanceof Error ? loadError.message : 'Unable to read the input file.'
+          throw new Error(`${file.name}: ${message}`)
+        }
+      }))
+      setSamples(loadedFiles.flat())
     } catch (loadError) {
       setSamples([])
       setError(loadError instanceof Error ? loadError.message : 'Unable to read the input file.')
@@ -49,11 +60,7 @@ function WaterPotabilityPage() {
     )))
   }
 
-  const missingValues = samples.some((sample) => {
-    const test = ACTIVE_WATER_POTABILITY_FORM.tests.find((candidate) => candidate.id === sample.testId)
-    return test?.fields.some((field) => !field.derivedFrom && !sample.values[field.id]?.trim()) ?? true
-  })
-  const canDownload = samples.length > 0 && Boolean(date) && Boolean(analyst.trim()) && !missingValues
+  const canDownload = samples.length > 0
 
   return (
     <main className="py-8">
@@ -66,17 +73,51 @@ function WaterPotabilityPage() {
           </p>
         </div>
 
+        <section className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div>
+            <h2 className="text-lg font-semibold text-amber-950">Blank Handwritten Log</h2>
+            <p className="text-sm text-amber-800 mt-1">Export empty, formatted Colitag and HPC tables for handwritten tracking.</p>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="text-sm font-medium text-amber-950">
+              Rows per test
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={blankRows}
+                onChange={(event) => setBlankRows(Number(event.target.value))}
+                className="mt-1 block w-28 rounded-md border border-amber-300 bg-white px-3 py-2 text-gray-900"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => downloadBlankWaterPotabilityWorkbook(blankRows)}
+              disabled={!Number.isFinite(blankRows) || blankRows < 1 || blankRows > 100}
+              className="bg-amber-700 hover:bg-amber-800 disabled:bg-gray-400 text-white font-semibold py-2 px-5 rounded-lg transition-colors"
+            >
+              Download Blank Workbook
+            </button>
+          </div>
+        </section>
+
         <FileUpload
           files={files}
           onFilesChange={handleFilesChange}
           accept=".xlsx,.xls,.csv"
+          multiple
           title="Drag and drop a CSV or Excel file here"
-          description="Supports Test Names containing Colitag or HPC"
+          description="Select one or more files. Samples from every file will be combined into one workbook."
         />
 
-        {files[0] && samples.length === 0 && (
+        {files.length > 0 && samples.length === 0 && (
           <section className="bg-white rounded-lg shadow-md p-6 mb-8 text-center">
-            <p className="text-gray-700 mb-4">Selected file: <span className="font-medium">{files[0].name}</span></p>
+            <p className="text-gray-700 mb-3 font-medium">Selected files ({files.length})</p>
+            <ul className="max-w-xl mx-auto mb-5 divide-y divide-gray-200 rounded-md border border-gray-200 text-left">
+              {files.map((file, index) => (
+                <li key={`${file.name}-${index}`} className="px-4 py-2 text-sm text-gray-700">{file.name}</li>
+              ))}
+            </ul>
             <div className="flex flex-wrap justify-center gap-3">
               <button
                 type="button"
@@ -84,7 +125,7 @@ function WaterPotabilityPage() {
                 disabled={isProcessing}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
               >
-                {isProcessing ? 'Loading...' : 'Load Samples'}
+                {isProcessing ? 'Loading...' : `Load Samples from ${files.length} File${files.length === 1 ? '' : 's'}`}
               </button>
               <button
                 type="button"
@@ -188,7 +229,7 @@ function WaterPotabilityPage() {
               <div>
                 <p className="font-semibold text-gray-900">Output</p>
                 <p className="text-sm text-gray-600">{ACTIVE_WATER_POTABILITY_FORM.outputFilename}</p>
-                {!canDownload && <p className="text-sm text-amber-700 mt-1">Complete the date, analyst, and all sample fields to download.</p>}
+                <p className="text-sm text-gray-500 mt-1">Blank fields are allowed and will remain blank in the workbook.</p>
               </div>
               <div className="flex gap-3">
                 <button
